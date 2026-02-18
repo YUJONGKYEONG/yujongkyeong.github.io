@@ -132,7 +132,7 @@
 
   .clear { clear:both; }
 
-  /* ==================== 각주 툴팁 (티스토리에서 그대로 가져옴) ==================== */
+  /* ==================== 각주 툴팁 ==================== */
   .tooltip {
     position: relative;
     display: inline-block;
@@ -150,7 +150,7 @@
     z-index: 10;
     bottom: 130%;
     left: 50%;
-    margin-left: -170px;
+    transform: translateX(-50%);
     opacity: 0;
     transition: opacity 0.25s;
     box-shadow: 0 6px 20px rgba(0,0,0,0.25);
@@ -170,12 +170,37 @@
   }
   .tooltip a { color:#4da6ff; text-decoration:underline; }
 
+  /* 하단 각주 간격 */
+  .footnotes p {
+    margin: 12px 0;
+  }
+
   @media (max-width: 768px) {
     body { padding:16px; font-size:1em; }
     .profile-img, .media-container iframe { width:100% !important; }
     .big-box { padding:16px; }
     h1 { font-size:1.9em; }
-    .tooltip .tooltiptext { width:280px; margin-left:-140px; }
+
+    .tooltip .tooltiptext {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 90vw;
+      max-width: 400px;
+      max-height: 80vh;
+      overflow-y: auto;
+      bottom: auto;
+      padding: 20px;
+      font-size: 1.05em;
+      line-height: 1.7;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+    .tooltip .tooltiptext::after {
+      display: none;
+    }
   }
 </style>
 </head>
@@ -344,12 +369,12 @@
   </li>
 </ul>
 
-<h2 data-ke-size="size26">각주</h2>
-<ol>
-  <li style="list-style-type:none;">[1] 경력공파 23세 종(鍾)○ 항렬.</li>
-  <li style="list-style-type:none;">[2] 세계 최초로 민주 시민으로서 2023년 2월 23일 대한민국 광화문 광장에서 국어사전 필사 운동을 인류 진보를 위해 선포했다.<br><a href="https://youtu.be/WBu4euWSEQ4?si=90voOwHgRsEBd-R1">https://youtu.be/WBu4euWSEQ4?si=90voOwHgRsEBd-R1</a></li>
-  <li style="list-style-type:none;">[3] 독서 캠페인 한 줄 슬로건 장려<br><a href="https://www.nlcy.go.kr/NLCY/contents/C40601000000.do?schM=view&id=1119135&schBcid=nlcy_normal03#MMAP_C40601000000">https://www.nlcy.go.kr/NLCY/contents/C40601000000.do?schM=view&id=1119135&schBcid=nlcy_normal03#MMAP_C40601000000</a></li>
-</ol>
+<h2>각주</h2>
+<div class="footnotes">
+  <p>[1] 경력공파 23세 종(鍾)○ 항렬.</p>
+  <p>[2] 세계 최초로 민주 시민으로서 2023년 2월 23일 대한민국 광화문 광장에서 국어사전 필사 운동을 인류 진보를 위해 선포했다.<br><a href="https://youtu.be/WBu4euWSEQ4?si=90voOwHgRsEBd-R1">https://youtu.be/WBu4euWSEQ4?si=90voOwHgRsEBd-R1</a></p>
+  <p>[3] 독서 캠페인 한 줄 슬로건 장려<br><a href="https://www.nlcy.go.kr/NLCY/contents/C40601000000.do?schM=view&id=1119135&schBcid=nlcy_normal03#MMAP_C40601000000">https://www.nlcy.go.kr/NLCY/contents/C40601000000.do?schM=view&id=1119135&schBcid=nlcy_normal03#MMAP_C40601000000</a></p>
+</div>
 
   <h2>외부 링크</h2>
   <ul class="external-links">
@@ -415,15 +440,22 @@
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const tooltips = document.querySelectorAll('.tooltip');
+
     tooltips.forEach(function(tooltip) {
       const popup = tooltip.querySelector('.tooltiptext');
       let hideTimeout;
 
       function show() {
         clearTimeout(hideTimeout);
+        // 다른 툴팁 모두 닫기
+        document.querySelectorAll('.tooltiptext').forEach(p => {
+          p.style.visibility = 'hidden';
+          p.style.opacity = '0';
+        });
         popup.style.visibility = 'visible';
         popup.style.opacity = '1';
       }
+
       function hide() {
         hideTimeout = setTimeout(() => {
           popup.style.visibility = 'hidden';
@@ -431,10 +463,28 @@
         }, 400);
       }
 
+      // PC: hover
       tooltip.addEventListener('mouseenter', show);
       tooltip.addEventListener('mouseleave', hide);
       popup.addEventListener('mouseenter', show);
       popup.addEventListener('mouseleave', hide);
+
+      // 모바일 + 클릭 지원
+      tooltip.addEventListener('click', function(e) {
+        e.stopPropagation();
+        show();
+      });
+      popup.addEventListener('click', function(e) {
+        e.stopPropagation();
+      });
+    });
+
+    // 화면 바깥 클릭 시 모두 닫기 (모바일용)
+    document.addEventListener('click', function() {
+      document.querySelectorAll('.tooltiptext').forEach(p => {
+        p.style.visibility = 'hidden';
+        p.style.opacity = '0';
+      });
     });
   });
 </script>
