@@ -1,0 +1,108 @@
+name: One-time profile style fix
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/one-time-profile-style-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  update-profile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the site
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Replace red accents and enlarge the main photo
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("index.html")
+          text = path.read_text(encoding="utf-8")
+
+          # Replace common red and dark-red web colours while preserving the rest of the palette.
+          yellow = "#f4d451"
+          red_colours = (
+              "#ff0000", "#f44336", "#ef4444", "#e53935", "#e74c3c",
+              "#dc2626", "#d32f2f", "#d9534f", "#c62828", "#c0392b",
+              "#b91c1c", "#a61b1b", "#8b0000", "#8b3d3e",
+          )
+          for old in red_colours:
+              text = text.replace(old, yellow).replace(old.upper(), yellow)
+
+          marker = "/* 2026-11-28: yellow accents and larger main profile photo */"
+          if marker not in text:
+              override = r'''
+
+/* 2026-11-28: yellow accents and larger main profile photo */
+.infobox tr:first-child td{
+  grid-template-columns:minmax(280px,310px) minmax(0,1fr);
+  gap:54px;
+}
+.profile-img{
+  width:310px;
+  height:395px;
+  max-width:100%;
+  border-color:var(--white);
+  box-shadow:10px 10px 0 var(--yellow);
+}
+.infobox tr:first-child td::after{
+  width:210px;
+  height:150px;
+  right:26px;
+  bottom:22px;
+  border:2px solid var(--yellow);
+  border-radius:50%;
+  background:rgba(244,212,81,.28);
+  transform:rotate(-12deg);
+}
+[style*="#ff0000" i],[style*="#f44336" i],[style*="#ef4444" i],
+[style*="#e53935" i],[style*="#e74c3c" i],[style*="#dc2626" i],
+[style*="#d32f2f" i],[style*="#d9534f" i],[style*="#c62828" i],
+[style*="#c0392b" i],[style*="#b91c1c" i],[style*="#8b0000" i],
+[style*="red" i]{
+  background-color:var(--yellow)!important;
+  border-color:#c8a91e!important;
+  color:var(--navy)!important;
+}
+@media(max-width:900px){
+  .infobox tr:first-child td{
+    grid-template-columns:minmax(220px,245px) minmax(0,1fr);
+    gap:38px;
+  }
+  .profile-img{width:245px;height:312px}
+}
+@media(max-width:600px){
+  .infobox tr:first-child td{gap:22px}
+  .profile-img{width:190px;height:242px}
+}
+'''
+              closing = "</style>"
+              if closing not in text:
+                  raise SystemExit("index.html does not contain a closing style tag")
+              text = text.replace(closing, override + "\n" + closing, 1)
+
+          path.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Validate and publish
+        shell: bash
+        run: |
+          git diff --check
+          if git diff --quiet -- index.html; then
+            echo "No profile change was needed."
+            exit 0
+          fi
+          git config user.name "YUJONGKYEONG"
+          git config user.email "jongkyeongyu@gmail.com"
+          git add index.html
+          git commit -m "Use yellow accents and enlarge the main profile photo"
+          git push origin HEAD:main
