@@ -1,5 +1,6 @@
 name: One-time profile style fix
 
+# Second push starts this workflow after GitHub has registered it on the default branch.
 on:
   push:
     branches:
