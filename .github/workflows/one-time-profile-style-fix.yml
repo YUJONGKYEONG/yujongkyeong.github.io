@@ -1,6 +1,5 @@
 name: One-time profile style fix
 
-# Second push starts this workflow after GitHub has registered it on the default branch.
 on:
   push:
     branches:
@@ -24,68 +23,26 @@ jobs:
         shell: bash
         run: |
           python - <<'PY'
+          import base64
+          import re
           from pathlib import Path
 
           path = Path("index.html")
           text = path.read_text(encoding="utf-8")
-
-          # Replace common red and dark-red web colours while preserving the rest of the palette.
           yellow = "#f4d451"
           red_colours = (
               "#ff0000", "#f44336", "#ef4444", "#e53935", "#e74c3c",
               "#dc2626", "#d32f2f", "#d9534f", "#c62828", "#c0392b",
-              "#b91c1c", "#a61b1b", "#8b0000", "#8b3d3e",
+              "#b91c1c", "#a61b1b", "#8b0000", "#8b3d3e", "#e63946",
+              "#ff4d4f", "#d80000", "#b22222",
           )
           for old in red_colours:
               text = text.replace(old, yellow).replace(old.upper(), yellow)
+          text = re.sub(r"(?i)(?P<prefix>[:\s])red(?=\s*[;,)])", rf"\g<prefix>{yellow}", text)
 
           marker = "/* 2026-11-28: yellow accents and larger main profile photo */"
           if marker not in text:
-              override = r'''
-
-/* 2026-11-28: yellow accents and larger main profile photo */
-.infobox tr:first-child td{
-  grid-template-columns:minmax(280px,310px) minmax(0,1fr);
-  gap:54px;
-}
-.profile-img{
-  width:310px;
-  height:395px;
-  max-width:100%;
-  border-color:var(--white);
-  box-shadow:10px 10px 0 var(--yellow);
-}
-.infobox tr:first-child td::after{
-  width:210px;
-  height:150px;
-  right:26px;
-  bottom:22px;
-  border:2px solid var(--yellow);
-  border-radius:50%;
-  background:rgba(244,212,81,.28);
-  transform:rotate(-12deg);
-}
-[style*="#ff0000" i],[style*="#f44336" i],[style*="#ef4444" i],
-[style*="#e53935" i],[style*="#e74c3c" i],[style*="#dc2626" i],
-[style*="#d32f2f" i],[style*="#d9534f" i],[style*="#c62828" i],
-[style*="#c0392b" i],[style*="#b91c1c" i],[style*="#8b0000" i],
-[style*="red" i]{
-  background-color:var(--yellow)!important;
-  border-color:#c8a91e!important;
-  color:var(--navy)!important;
-}
-@media(max-width:900px){
-  .infobox tr:first-child td{
-    grid-template-columns:minmax(220px,245px) minmax(0,1fr);
-    gap:38px;
-  }
-  .profile-img{width:245px;height:312px}
-}
-@media(max-width:600px){
-  .infobox tr:first-child td{gap:22px}
-  .profile-img{width:190px;height:242px}
-}
-'''
+              override = base64.b64decode("CgovKiAyMDI2LTExLTI4OiB5ZWxsb3cgYWNjZW50cyBhbmQgbGFyZ2VyIG1haW4gcHJvZmlsZSBwaG90byAqLwouaW5mb2JveCB0cjpmaXJzdC1jaGlsZCB0ZHsKICBncmlkLXRlbXBsYXRlLWNvbHVtbnM6bWlubWF4KDI4MHB4LDMxMHB4KSBtaW5tYXgoMCwxZnIpOwogIGdhcDo1NHB4Owp9Ci5wcm9maWxlLWltZ3sKICB3aWR0aDozMTBweDsKICBoZWlnaHQ6Mzk1cHg7CiAgbWF4LXdpZHRoOjEwMCU7CiAgYm9yZGVyLWNvbG9yOnZhcigtLXdoaXRlKTsKICBib3gtc2hhZG93OjEwcHggMTBweCAwIHZhcigtLXllbGxvdyk7Cn0KLmluZm9ib3ggdHI6Zmlyc3QtY2hpbGQgdGQ6OmFmdGVyewogIHdpZHRoOjIxMHB4OwogIGhlaWdodDoxNTBweDsKICByaWdodDoyNnB4OwogIGJvdHRvbToyMnB4OwogIGJvcmRlcjoycHggc29saWQgdmFyKC0teWVsbG93KTsKICBib3JkZXItcmFkaXVzOjUwJTsKICBiYWNrZ3JvdW5kOnJnYmEoMjQ0LDIxMiw4MSwuMjgpOwogIHRyYW5zZm9ybTpyb3RhdGUoLTEyZGVnKTsKfQpbc3R5bGUqPSIjZmYwMDAwIiBpXSxbc3R5bGUqPSIjZjQ0MzM2IiBpXSxbc3R5bGUqPSIjZWY0NDQ0IiBpXSwKW3N0eWxlKj0iI2U1MzkzNSIgaV0sW3N0eWxlKj0iI2U3NGMzYyIgaV0sW3N0eWxlKj0iI2RjMjYyNiIgaV0sCltzdHlsZSo9IiNkMzJmMmYiIGldLFtzdHlsZSo9IiNkOTUzNGYiIGldLFtzdHlsZSo9IiNjNjI4MjgiIGldLApbc3R5bGUqPSIjYzAzOTJiIiBpXSxbc3R5bGUqPSIjYjkxYzFjIiBpXSxbc3R5bGUqPSIjOGIwMDAwIiBpXSwKW3N0eWxlKj0icmVkIiBpXXsKICBiYWNrZ3JvdW5kLWNvbG9yOnZhcigtLXllbGxvdykhaW1wb3J0YW50OwogIGJvcmRlci1jb2xvcjojYzhhOTFlIWltcG9ydGFudDsKICBjb2xvcjp2YXIoLS1uYXZ5KSFpbXBvcnRhbnQ7Cn0KQG1lZGlhKG1heC13aWR0aDo5MDBweCl7CiAgLmluZm9ib3ggdHI6Zmlyc3QtY2hpbGQgdGR7CiAgICBncmlkLXRlbXBsYXRlLWNvbHVtbnM6bWlubWF4KDIyMHB4LDI0NXB4KSBtaW5tYXgoMCwxZnIpOwogICAgZ2FwOjM4cHg7CiAgfQogIC5wcm9maWxlLWltZ3t3aWR0aDoyNDVweDtoZWlnaHQ6MzEycHh9Cn0KQG1lZGlhKG1heC13aWR0aDo2MDBweCl7CiAgLmluZm9ib3ggdHI6Zmlyc3QtY2hpbGQgdGR7Z2FwOjIycHh9CiAgLnByb2ZpbGUtaW1ne3dpZHRoOjE5MHB4O2hlaWdodDoyNDJweH0KfQo=").decode("utf-8")
               closing = "</style>"
               if closing not in text:
                   raise SystemExit("index.html does not contain a closing style tag")
